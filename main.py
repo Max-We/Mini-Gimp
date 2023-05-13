@@ -1,7 +1,7 @@
 import click
 from PIL import Image
 
-from util import apply_threshold, apply_brightness, apply_contrast
+from util import apply_threshold, apply_brightness, apply_contrast, apply_blur, apply_sharpen
 
 
 @click.command()
@@ -21,9 +21,9 @@ def edit(image_path, threshold, brightness, contrast, blur, sharpen):
     if contrast:
         image = apply_contrast(image, contrast)
     if blur:
-        print("Blur")
+        image = apply_blur(image, blur)
     if sharpen:
-        print("Sharpen")
+        image = apply_sharpen(image, sharpen)
 
     image.save("example_out.png")
 

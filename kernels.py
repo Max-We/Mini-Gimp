@@ -15,3 +15,8 @@ def create_sharpen_kernel(strength):
                         [-1, 4, -1],
                         [0, -1, 0]])
     return ones + laplace * strength, 3
+
+kernel_erode = np.array([[0, 1, 0],
+                         [1, 1, 1],
+                         [0, 1, 0]])
+

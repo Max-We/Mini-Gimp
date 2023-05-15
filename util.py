@@ -1,6 +1,9 @@
+import math
+
+import numpy as np
 from PIL import Image
 
-from kernels import create_blur_kernel, create_sharpen_kernel
+from kernels import create_blur_kernel, create_sharpen_kernel, kernel_erode
 from models import RGB
 
 
@@ -42,6 +45,7 @@ def apply_contrast(image, value):
 
     return img
 
+
 # Swap channels
 def apply_swap_channels(image, swap_channels):
     img = image.copy().convert("RGB")
@@ -56,12 +60,59 @@ def apply_swap_channels(image, swap_channels):
             img.putpixel((x, y), channels)
     return img
 
+
+def apply_erode(image):
+    return _apply_erode_dilate(image, "erode")
+
+
+def apply_dilate(image):
+    return _apply_erode_dilate(image, "dilate")
+
+
+# https://docs.opencv.org/3.4/db/df6/tutorial_erosion_dilatation.html
+def _apply_erode_dilate(image, mode):
+    w, h = image.size
+    img_out = image.copy()
+    n_channels = len(img_out.getbands())
+
+    kernel_size = 3
+    for x in range(1, w - 1):
+        for y in range(1, h - 1):
+            # Naming for variable from https://www.perplexity.ai/search/7e0e61da-bd66-49b6-94e7-29ee46d41a17?s=t
+            # Result: ks x ks x channels
+            receptive_field = np.zeros((kernel_size, kernel_size, n_channels))
+
+            # Get values for receptive field
+            for i in range(kernel_size):
+                for j in range(kernel_size):
+                    receptive_field[i][j] = image.getpixel((x - 1 + i, y - 1 + j)) if kernel_erode[i][j] == 1 else (
+                        [None for _ in range(n_channels)])
+
+            # Apply effect to each channel individually
+            # Idea for applying on each channel individually: https://stackoverflow.com/a/43535662
+            pixel_updated = [0 for _ in range(n_channels)]
+            for c in range(receptive_field.shape[-1]):
+                channel_pixels = receptive_field[:, :, c]
+                # Choose minimum / maximum value
+                if mode == "erode":
+                    pixel_updated[c] = np.nanmin(channel_pixels).astype(int)
+                elif mode == "dilate":
+                    pixel_updated[c] = np.nanmax(channel_pixels).astype(int)
+                else:
+                    print(f"Unknown edit mode '{mode}' (only 'erode', 'dilate' allowed).")
+                    return image
+
+            img_out.putpixel((x, y), tuple(pixel_updated))
+    return img_out
+
+
 # Blur
 def apply_blur(image, strength):
     # Input is 0-100 but everything above 10 is unusable
     normalized_strength = round(strength / 10)
     kernel, kernel_size = create_blur_kernel(normalized_strength)
     return _apply_kernel(image, kernel, kernel_size)
+
 
 # Sharpen
 def apply_sharpen(image, strength):
@@ -75,7 +126,7 @@ def _apply_kernel(image, kernel, kernel_size):
     w, h = image.size
     # `k` is used to make the filter stop at the edge of the image
     # In a future version, padding / mirroring of the image would be nice to have for better result
-    k = kernel_size//2
+    k = kernel_size // 2
     img_out = image.copy()
 
     # Iterate all pixels of the image

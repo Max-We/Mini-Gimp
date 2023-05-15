@@ -1,6 +1,7 @@
 from PIL import Image
 
 from kernels import create_blur_kernel, create_sharpen_kernel
+from models import RGB
 
 
 # Threshold
@@ -39,6 +40,20 @@ def apply_contrast(image, value):
             channels = [round(factor * (c - 128) + 128) for c in channels]
             img.putpixel((x, y), tuple(channels))
 
+    return img
+
+# Swap channels
+def apply_swap_channels(image, swap_channels):
+    img = image.copy().convert("RGB")
+    c1, c2 = [RGB[c].value for c in swap_channels]
+
+    for x in range(img.width):
+        for y in range(img.height):
+            channels = list(img.getpixel((x, y)))
+            channels[c1], channels[c2] = channels[c2], channels[c1]
+            channels = tuple(channels)
+
+            img.putpixel((x, y), channels)
     return img
 
 # Blur

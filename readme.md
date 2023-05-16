@@ -22,11 +22,7 @@ Options:
   --help                      Show this message and exit.
 ```
 
-<figure class="video_container">
-  <video controls="true" allowfullscreen="true">
-    <source src="showcase.webm" type="video/webm">
-  </video>
-</figure>
+![](showcase.webm)
 
 ## Standardfilters
 

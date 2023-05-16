@@ -1,20 +1,6 @@
-# Studienleistung 1 (Maximilian Weichart)
+# Mini-GIMP
 
-## Standardfilter
-
-- Threshold
-- Brightness
-- Contrast
-- Blur
-- Sharpen
-
-## Wahlpflichtfeatures
-
-- sinnvolle grafische Anzeige des Ergebnisses
-- Farbkanäle vertauschen
-- Erode / Dilate
-
-## Implementierung
+Mini-GIMP is a small py project that implements some features to edit images from scratch.
 
 ```text
 Usage: main.py [OPTIONS] IMAGE_PATH
@@ -35,3 +21,23 @@ Options:
   --dilate                    Applies dilate to the image.
   --help                      Show this message and exit.
 ```
+
+<figure class="video_container">
+  <video controls="true" allowfullscreen="true">
+    <source src="showcase.webm" type="video/webm">
+  </video>
+</figure>
+
+## Standardfilters
+
+- Threshold
+- Brightness
+- Contrast
+- Blur
+- Sharpen
+
+## Elective features
+
+- UI for displaying the result
+- Swap color-channels
+- Erode / Dilate

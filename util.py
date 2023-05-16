@@ -1,13 +1,11 @@
-import math
-
 import numpy as np
 from PIL import Image
 
-from kernels import create_blur_kernel, create_sharpen_kernel, kernel_erode
+from kernels import create_blur_kernel, create_sharpen_kernel, cross_kernel
 from models import RGB
 
 
-# Threshold
+# Applies the threshold function to an image (only BW)
 def apply_threshold(image: Image, value: int) -> Image:
     img = image.convert("L").copy()
     for x in range(img.width):
@@ -21,32 +19,32 @@ def apply_threshold(image: Image, value: int) -> Image:
     return img
 
 
-# Brightness
+# Changes the brightness of an image
 def apply_brightness(image: Image, value: int) -> Image:
     img = image.copy()
     for x in range(img.width):
         for y in range(img.height):
-            channels = list(img.getpixel((x, y)))
-            img.putpixel((x, y), tuple([c + value for c in channels]))
+            channels = np.atleast_1d(img.getpixel((x, y)))
+            img.putpixel((x, y), tuple([int(c + value) for c in channels]))
 
     return img
 
 
-# Contrast
+# Changes the contrast of an image
 # https://www.perplexity.ai/search/8a122732-bffb-4b6f-a0db-18c5b3555a18?s=t
 def apply_contrast(image, value):
     img = image.copy()
     factor = (259 * (value + 255)) / (255 * (259 - value))
     for x in range(img.width):
         for y in range(img.height):
-            channels = list(img.getpixel((x, y)))
+            channels = np.atleast_1d(img.getpixel((x, y)))
             channels = [round(factor * (c - 128) + 128) for c in channels]
             img.putpixel((x, y), tuple(channels))
 
     return img
 
 
-# Swap channels
+# Swaps channels of an RGB image
 def apply_swap_channels(image, swap_channels):
     img = image.copy().convert("RGB")
     c1, c2 = [RGB[c].value for c in swap_channels]
@@ -61,14 +59,17 @@ def apply_swap_channels(image, swap_channels):
     return img
 
 
+# Applies erosion to the image
 def apply_erode(image):
     return _apply_erode_dilate(image, "erode")
 
 
+# Applies dilation to the image
 def apply_dilate(image):
     return _apply_erode_dilate(image, "dilate")
 
 
+# Applies erosion / dilation to the image
 # https://docs.opencv.org/3.4/db/df6/tutorial_erosion_dilatation.html
 def _apply_erode_dilate(image, mode):
     w, h = image.size
@@ -85,9 +86,10 @@ def _apply_erode_dilate(image, mode):
             # Get values for receptive field
             for i in range(kernel_size):
                 for j in range(kernel_size):
-                    receptive_field[i][j] = image.getpixel((x - 1 + i, y - 1 + j)) if kernel_erode[i][j] == 1 else (
+                    receptive_field[i][j] = image.getpixel((x - 1 + i, y - 1 + j)) if cross_kernel[i][j] == 1 else (
                         [None for _ in range(n_channels)])
 
+            print(receptive_field.shape)
             # Apply effect to each channel individually
             # Idea for applying on each channel individually: https://stackoverflow.com/a/43535662
             pixel_updated = [0 for _ in range(n_channels)]
@@ -95,9 +97,9 @@ def _apply_erode_dilate(image, mode):
                 channel_pixels = receptive_field[:, :, c]
                 # Choose minimum / maximum value
                 if mode == "erode":
-                    pixel_updated[c] = np.nanmin(channel_pixels).astype(int)
+                    pixel_updated[c] = int(np.nanmin(channel_pixels))
                 elif mode == "dilate":
-                    pixel_updated[c] = np.nanmax(channel_pixels).astype(int)
+                    pixel_updated[c] = int(np.nanmax(channel_pixels))
                 else:
                     print(f"Unknown edit mode '{mode}' (only 'erode', 'dilate' allowed).")
                     return image
@@ -106,7 +108,7 @@ def _apply_erode_dilate(image, mode):
     return img_out
 
 
-# Blur
+# Applies a simple box-blur filter to the image
 def apply_blur(image, strength):
     # Input is 0-100 but everything above 10 is unusable
     normalized_strength = round(strength / 10)
@@ -114,14 +116,14 @@ def apply_blur(image, strength):
     return _apply_kernel(image, kernel, kernel_size)
 
 
-# Sharpen
+# Applies a simple sharpen filter to the image
 def apply_sharpen(image, strength):
     # Input is 0-100 but everything above 5 is unusable
     normalized_strength = strength / 20
     kernel, kernel_size = create_sharpen_kernel(normalized_strength)
     return _apply_kernel(image, kernel, kernel_size)
 
-
+# Applies a kernel to the input image
 def _apply_kernel(image, kernel, kernel_size):
     w, h = image.size
     # `k` is used to make the filter stop at the edge of the image
@@ -137,8 +139,9 @@ def _apply_kernel(image, kernel, kernel_size):
             for i in range(kernel_size):
                 for j in range(kernel_size):
                     # Iterate all channels of the pixel and calculate the result
-                    channels_in = list(image.getpixel((x - k + i, y - k + j)))
-                    for c in range(len(channels_in)):
+                    # The `np.atleast_1d` functionality was found using ChatGPT
+                    channels_in = np.atleast_1d(image.getpixel((x - k + i, y - k + j))).astype(float)
+                    for c in range(channels_in.size):
                         channels_out[c] += int(channels_in[c] * kernel[i][j])
             img_out.putpixel((x, y), tuple(channels_out))
 

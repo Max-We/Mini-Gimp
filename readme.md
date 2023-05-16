@@ -1,4 +1,4 @@
-# Mini-GIMP
+# ✨ Mini-GIMP ✨
 
 Mini-GIMP is a small py project that implements some features to edit images from scratch.
 

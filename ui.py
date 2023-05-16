@@ -16,7 +16,7 @@ def spawn_output_window(image, image_path):
     label.pack()
 
     # Save button
-    button = tk.Button(root, text="Save", command=lambda: save_image(image, "output.png"))
+    button = tk.Button(root, text="Save", command=lambda: save_image(image, image_path))
     button.pack()
 
     root.mainloop()

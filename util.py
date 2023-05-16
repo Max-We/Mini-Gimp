@@ -6,7 +6,7 @@ from models import RGB
 
 
 # Applies the threshold function to an image (only BW)
-def apply_threshold(image: Image, value: int) -> Image:
+def apply_threshold(image, value):
     img = image.convert("L").copy()
     for x in range(img.width):
         for y in range(img.height):
@@ -20,7 +20,7 @@ def apply_threshold(image: Image, value: int) -> Image:
 
 
 # Changes the brightness of an image
-def apply_brightness(image: Image, value: int) -> Image:
+def apply_brightness(image, value):
     img = image.copy()
     for x in range(img.width):
         for y in range(img.height):
@@ -52,6 +52,7 @@ def apply_swap_channels(image, swap_channels):
     for x in range(img.width):
         for y in range(img.height):
             channels = list(img.getpixel((x, y)))
+            # Syntax from ChatGPT
             channels[c1], channels[c2] = channels[c2], channels[c1]
             channels = tuple(channels)
 
@@ -89,7 +90,6 @@ def _apply_erode_dilate(image, mode):
                     receptive_field[i][j] = image.getpixel((x - 1 + i, y - 1 + j)) if cross_kernel[i][j] == 1 else (
                         [None for _ in range(n_channels)])
 
-            print(receptive_field.shape)
             # Apply effect to each channel individually
             # Idea for applying on each channel individually: https://stackoverflow.com/a/43535662
             pixel_updated = [0 for _ in range(n_channels)]
@@ -110,7 +110,7 @@ def _apply_erode_dilate(image, mode):
 
 # Applies a simple box-blur filter to the image
 def apply_blur(image, strength):
-    # Input is 0-100 but everything above 10 is unusable
+    # Input is 0-100 but everything above 10 is unusable, therefore it should be normalized for usability
     normalized_strength = round(strength / 10)
     kernel, kernel_size = create_blur_kernel(normalized_strength)
     return _apply_kernel(image, kernel, kernel_size)
@@ -118,7 +118,7 @@ def apply_blur(image, strength):
 
 # Applies a simple sharpen filter to the image
 def apply_sharpen(image, strength):
-    # Input is 0-100 but everything above 5 is unusable
+    # Input is 0-100 but everything above 5 is unusable, therefore it should be normalized for usability
     normalized_strength = strength / 20
     kernel, kernel_size = create_sharpen_kernel(normalized_strength)
     return _apply_kernel(image, kernel, kernel_size)

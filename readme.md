@@ -2,6 +2,8 @@
 
 Mini-GIMP is a small py project that implements some features to edit images from scratch.
 
+![](showcase.webm)
+
 ```text
 Usage: main.py [OPTIONS] IMAGE_PATH
 
@@ -21,8 +23,6 @@ Options:
   --dilate                    Applies dilate to the image.
   --help                      Show this message and exit.
 ```
-
-![](showcase.webm)
 
 ## Standardfilters
 

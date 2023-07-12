@@ -2,7 +2,7 @@
 
 Mini-GIMP is a small py project that implements some features to edit images from scratch.
 
-![](showcase.webm)
+![showcase video](showcase.gif)
 
 ```text
 Usage: main.py [OPTIONS] IMAGE_PATH
